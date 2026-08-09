@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -7,26 +7,138 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <header class="nav"><a class="brand" href="/">CosyVoice <span>Studio</span></a><nav><a class="active" href="/">生成声音</a><a href="/settings">设置</a></nav></header>
+    <header class="nav">
+      <a class="brand" href="/">CosyVoice <span>Studio</span></a>
+      <nav>
+        <a class="active" href="/">生成声音</a><a href="/settings">设置</a>
+      </nav>
+    </header>
     <main class="shell">
-      <section class="intro"><p class="eyebrow">VOICE GENERATOR</p><h1>把一句话，变成自然的人声。</h1><p>自由控制随机音量、语速和声音效果，合成完成后自动播放到已配置的音频设备。</p></section>
       <section class="panel">
         <form id="generate-form">
-          <label>文本<textarea id="text" rows="6" placeholder="输入要说的话..." required></textarea></label>
-          <label>系统提示语<textarea id="systemPrompt" rows="3" placeholder="例如：语气自然，稍微急促，像平常聊天。"></textarea></label>
+          <div class="text-stack">
+            <label
+              >翻译<textarea
+                id="translatedText"
+                rows="6"
+                placeholder="翻译结果会显示在这里..."
+              ></textarea>
+            </label>
+            <div class="translate-actions">
+              <label class="language-picker"
+                >翻译成<select id="targetLanguage">
+                  <option value="中文">中文</option>
+                  <option value="英文">英文</option>
+                  <option value="日文">日文</option>
+                  <option value="韩文">韩文</option>
+                </select></label
+              >
+              <button
+                type="button"
+                id="translate-button"
+                class="secondary-button"
+              >
+                翻译后填入文本
+              </button>
+            </div>
+            <label
+              >文本<textarea
+                id="text"
+                rows="6"
+                placeholder="输入要说的话..."
+                required
+              ></textarea>
+            </label>
+          </div>
+          <label
+            >系统提示语<textarea
+              id="systemPrompt"
+              rows="3"
+              placeholder="咬字不清晰 每个字随机添加尾音 短文本读慢一点"
+            ></textarea>
+          </label>
+          <div class="translate-actions">
+            <label class="language-picker"
+              >情绪<select id="emotion">
+                <option value="random" selected>随机</option>
+                <option value="neutral">自然</option>
+                <option value="happy">开心</option>
+                <option value="surprised">惊讶</option>
+                <option value="fearful">紧张</option>
+                <option value="angry">生气</option>
+                <option value="sad">难过</option>
+                <option value="disgusted">嫌弃</option>
+              </select></label
+            >
+          </div>
           <details class="voice-settings">
-            <summary><span>声音参数</span><small id="voice-settings-summary">音量 18–20 · 语速 0.98–1.10 · lowpass</small></summary>
+            <summary>
+              <span>声音参数</span
+              ><small id="voice-settings-summary"
+                >音量 18–20 · 语速 0.98–1.10 · lowpass</small
+              >
+            </summary>
             <div class="parameter-grid">
-              <label>最小音量<input id="minVolume" type="number" min="0" max="100" step="1" value="18" required /></label>
-              <label>最大音量<input id="maxVolume" type="number" min="0" max="100" step="1" value="20" required /></label>
-              <label>最小语速<input id="minRate" type="number" min="0.5" max="2" step="0.01" value="0.98" required /></label>
-              <label>最大语速<input id="maxRate" type="number" min="0.5" max="2" step="0.01" value="1.1" required /></label>
-              <label class="effect-field">Effect<input id="effect" value="lowpass" required /></label>
+              <label
+                >最小音量<input
+                  id="minVolume"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="18"
+                  required
+              /></label>
+              <label
+                >最大音量<input
+                  id="maxVolume"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="20"
+                  required
+              /></label>
+              <label
+                >最小语速<input
+                  id="minRate"
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.01"
+                  value="0.95"
+                  required
+              /></label>
+              <label
+                >最大语速<input
+                  id="maxRate"
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.01"
+                  value="1.1"
+                  required
+              /></label>
+              <label class="effect-field"
+                >Effect<input id="effect" value="lowpass" required
+              /></label>
+              <label class="profile-field"
+                >自然度<select id="audioProfile">
+                  <option value="natural">自然</option>
+                  <option value="warm" selected>柔和</option>
+                  <option value="lofi">松一点</option>
+                </select></label
+              >
             </div>
           </details>
           <div class="generate-actions">
             <button type="submit">生成并播放 <i>→</i></button>
-            <label class="device-picker">输出设备<select id="outputDevice" required><option value="">正在读取设备...</option></select></label>
+            <button type="button" id="cancel-playback" class="secondary-button" disabled>取消播放</button>
+            <label class="device-picker"
+              >输出设备<select id="outputDevice" required>
+                <option value="">正在读取设备...</option>
+              </select></label
+            >
           </div>
         </form>
         <div id="status" class="status" hidden></div>

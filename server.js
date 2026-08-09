@@ -12,6 +12,7 @@ import {
   listAudioOutputDevices,
 } from "./src/audio-output.js";
 import { generateRandomSSML } from "./src/ssml-random.js";
+import { translateText } from "./src/translate.js";
 import {
   getAudioDeviceSelection,
   getSettings,
@@ -24,6 +25,27 @@ dotenv.config({ path: path.join(projectDir, ".env"), quiet: true });
 
 const app = new Hono();
 let playbackQueue = Promise.resolve();
+let activePlayback = null;
+let activeGenerationController = null;
+let playbackSession = 0;
+
+function buildEmotionInstruction(emotion) {
+  const normalized = String(emotion || "random").trim();
+  const emotions = [
+    "neutral",
+    "happy",
+    "surprised",
+    "fearful",
+    "angry",
+    "sad",
+    "disgusted",
+  ];
+  const selected =
+    normalized === "random"
+      ? emotions[Math.floor(Math.random() * emotions.length)]
+      : normalized;
+  return `你正在进行办公互动，你说话的情感是${selected}。`;
+}
 
 app.get("/api/settings", async (c) => c.json(await getSettings()));
 
@@ -47,9 +69,12 @@ app.get("/api/audio-devices", async (c) => {
   );
   const selection = await getAudioDeviceSelection();
   const fallbackDevice =
-    devices.find((device) => /CABLE Input|VB-Audio|Voicemeeter|Virtual/i.test(device.name)) ||
-    devices[0];
-  const selectedDeviceId = devices.some((device) => device.id === selection.deviceId)
+    devices.find((device) =>
+      /CABLE Input|VB-Audio|Voicemeeter|Virtual/i.test(device.name)
+    ) || devices[0];
+  const selectedDeviceId = devices.some(
+    (device) => device.id === selection.deviceId
+  )
     ? selection.deviceId
     : fallbackDevice?.id ?? null;
   if (selectedDeviceId !== selection.deviceId) {
@@ -69,10 +94,25 @@ app.put("/api/audio-device", async (c) => {
   return c.json({ ok: true, device });
 });
 
+app.post("/api/playback/cancel", async (c) => {
+  playbackSession += 1;
+  if (activeGenerationController) {
+    activeGenerationController.abort();
+    activeGenerationController = null;
+  }
+  if (activePlayback) {
+    activePlayback.cancel();
+    activePlayback = null;
+  }
+  return c.json({ ok: true });
+});
+
 app.post("/api/generate", async (c) => {
   const body = await c.req.json();
   const text = String(body.text || "").trim();
   const instruction = String(body.systemPrompt || "").trim();
+  const emotion = String(body.emotion || "neutral").trim();
+  const audioProfile = String(body.audioProfile || "natural").trim();
   const minVolume = Number(body.minVolume);
   const maxVolume = Number(body.maxVolume);
   const minRate = Number(body.minRate);
@@ -101,26 +141,39 @@ app.post("/api/generate", async (c) => {
     return c.json({ error: "请先在设置页完成 CosyVoice 配置" }, 400);
   }
 
-  const { ssml, volume, rate } = generateRandomSSML(text, {
+  const { ssml, volume, rate, pitch } = generateRandomSSML(text, {
     minVolume,
     maxVolume,
     minRate,
     maxRate,
     effect,
   });
+  console.log(ssml);
   const id = uuid();
+  const session = playbackSession;
+  const controller = new AbortController();
 
   try {
     const generateAndPlay = async () => {
+      if (session !== playbackSession) {
+        throw new Error("已取消播放");
+      }
+      activeGenerationController = controller;
       const { deviceId } = await getAudioDeviceSelection();
       const player = createStreamAudioPlayer({
         deviceQuery: deviceId ?? process.env.COSYVOICE_OUTPUT_DEVICE,
+        audioProfile,
       });
+      activePlayback = player;
       // Attach a handler immediately so an early PortAudio failure never becomes unhandled.
       const playbackPromise = player.wait();
       playbackPromise.catch(() => {});
 
       try {
+        if (session !== playbackSession) {
+          player.cancel();
+          throw new Error("已取消播放");
+        }
         await synthesizeSpeechStream({
           text: ssml,
           model: settings.DEFAULT_MODEL,
@@ -128,19 +181,28 @@ app.post("/api/generate", async (c) => {
           apiKey: settings.DASHSCOPE_API_KEY,
           workspaceId: settings.WORKSPACE_ID,
           enableSsml: true,
-          instruction,
-          volume: 50,
-          rate: 1,
-          pitch: 1,
+          instruction: [buildEmotionInstruction(emotion), instruction]
+            .filter(Boolean)
+            .join("\n"),
+          volume,
+          rate,
+          // pitch,
+          signal: controller.signal,
           onChunk(chunk) {
             player.write(chunk);
           },
         });
       } finally {
         player.end();
+        if (activePlayback === player) activePlayback = null;
+        if (activeGenerationController === controller)
+          activeGenerationController = null;
       }
 
       const playback = await playbackPromise;
+      if (session !== playbackSession) {
+        throw new Error("已取消播放");
+      }
       return playback;
     };
 
@@ -158,6 +220,24 @@ app.post("/api/generate", async (c) => {
       createdAt: new Date().toISOString(),
     };
     return c.json(generation);
+  } catch (error) {
+    return c.json({ error: error.message || String(error) }, 500);
+  }
+});
+
+app.post("/api/translate", async (c) => {
+  const body = await c.req.json();
+  const text = String(body.text || "").trim();
+  const targetLanguage = String(body.targetLanguage || "中文").trim();
+  const sourceLanguage = String(body.sourceLanguage || "自动").trim();
+  if (!text) return c.json({ error: "请输入要翻译的文本" }, 400);
+  try {
+    const result = await translateText({
+      text,
+      targetLanguage,
+      sourceLanguage,
+    });
+    return c.json(result);
   } catch (error) {
     return c.json({ error: error.message || String(error) }, 500);
   }

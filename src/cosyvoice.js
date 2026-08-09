@@ -34,6 +34,7 @@ export function synthesizeSpeech({
   apiKey = process.env.DASHSCOPE_API_KEY,
   workspaceId = process.env.WORKSPACE_ID,
   timeoutMs = 120000,
+  signal,
 } = {}) {
   if (!text?.trim()) throw new Error("text 不能为空");
   if (!apiKey) throw new Error("缺少环境变量 DASHSCOPE_API_KEY");
@@ -59,15 +60,30 @@ export function synthesizeSpeech({
       timeoutMs
     );
 
+    function abortWithSignal() {
+      finish(new Error("已取消播放"));
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        finish(new Error("已取消播放"));
+        return;
+      }
+      signal.addEventListener("abort", abortWithSignal, { once: true });
+    }
+
     function finish(error) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (signal) signal.removeEventListener("abort", abortWithSignal);
       if (
         ws.readyState === WebSocket.OPEN ||
         ws.readyState === WebSocket.CONNECTING
-      )
-        ws.close();
+      ) {
+        if (error?.message === "已取消播放") ws.terminate();
+        else ws.close();
+      }
       if (error) return reject(error);
       const audio = Buffer.concat(chunks);
       fs.writeFileSync(resolvedOutput, audio);
@@ -172,6 +188,7 @@ export function synthesizeSpeechStream({
   workspaceId = process.env.WORKSPACE_ID,
   timeoutMs = 120000,
   onChunk,
+  signal,
 } = {}) {
   if (!text?.trim()) throw new Error("text 不能为空");
   if (!apiKey) throw new Error("缺少环境变量 DASHSCOPE_API_KEY");
@@ -194,15 +211,30 @@ export function synthesizeSpeechStream({
       timeoutMs
     );
 
+    function abortWithSignal() {
+      finish(new Error("已取消播放"));
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        finish(new Error("已取消播放"));
+        return;
+      }
+      signal.addEventListener("abort", abortWithSignal, { once: true });
+    }
+
     function finish(error) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (signal) signal.removeEventListener("abort", abortWithSignal);
       if (
         ws.readyState === WebSocket.OPEN ||
         ws.readyState === WebSocket.CONNECTING
-      )
-        ws.close();
+      ) {
+        if (error?.message === "已取消播放") ws.terminate();
+        else ws.close();
+      }
       if (error) return reject(error);
       resolve({ model, voice, format, taskId });
     }

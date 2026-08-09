@@ -11,6 +11,24 @@ DASHSCOPE_API_KEY=你的百炼API Key
 WORKSPACE_ID=你的业务空间ID
 ```
 
+翻译功能默认使用 `qwen3.5-flash`，如果你想改模型，可以额外设置：
+
+```env
+TRANSLATION_MODEL=qwen3.5-flash
+```
+
+## 依赖安装
+
+项目需要系统里可直接执行 `ffmpeg`。如果还没有安装，请先安装后再运行项目。
+
+Windows 可以用下面任一种方式：
+
+```powershell
+winget install Gyan.FFmpeg
+```
+
+或者手动下载 ffmpeg，并把 `bin` 目录加入 `PATH`。
+
 ## 本地运行
 
 ```powershell
@@ -33,8 +51,36 @@ COSYVOICE_OUTPUT_DEVICE=CABLE Input (VB-Audio Virtual Cable)
 ```toml
 [mcp_servers.cosyvoice]
 command = "node"
-args = ["C:/Users/a1009/Downloads/voice_change/cosyvoice/mcp-server.js"]
-cwd = "C:/Users/a1009/Downloads/voice_change/cosyvoice"
+args = ["cosyvoice/mcp-server.js"]
+cwd = "cosyvoice"
 ```
 
 配置后新开一个 Codex 任务，工具列表中应出现 `synthesize_speech`。
+
+## 翻译功能
+
+网页端提供“翻译到文本框”按钮，会调用 `/api/translate`：
+
+- 输入原文后，选择目标语言
+- 点击翻译，结果会直接回填到“文本”输入框
+- 再点击“生成并播放”即可合成翻译后的内容
+
+## 情绪控制
+
+网页端新增了“情绪”下拉框，会按阿里云 CosyVoice 的 `instruct` 规范传入情绪控制指令。
+
+支持的情绪包括：
+
+- `neutral`
+- `happy`
+- `surprised`
+- `fearful`
+- `angry`
+- `sad`
+- `disgusted`
+
+注意：
+
+- 这项能力需要使用支持情绪控制的 CosyVoice 音色
+- 如果当前默认音色不支持情绪，合成可能会失败
+- 官方文档里 `cosyvoice-v3-plus` 和 `cosyvoice-v3-flash` 的部分音色支持情绪控制
