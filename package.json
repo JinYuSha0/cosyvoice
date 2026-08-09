@@ -1,0 +1,26 @@
+{
+  "name": "cosyvoice",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "demo": "node index.js",
+    "start": "node server.js",
+    "web": "node server.js",
+    "mcp": "node mcp-server.js",
+    "test": "node --test"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@hono/node-server": "^2.1.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^17.4.2",
+    "hono": "^4.13.1",
+    "naudiodon": "^2.3.6",
+    "uuid": "^14.0.1",
+    "ws": "^8.21.3",
+    "zod": "^4.4.3"
+  }
+}

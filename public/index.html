@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CosyVoice Studio</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="nav"><a class="brand" href="/">CosyVoice <span>Studio</span></a><nav><a class="active" href="/">生成声音</a><a href="/settings">设置</a></nav></header>
+    <main class="shell">
+      <section class="intro"><p class="eyebrow">VOICE GENERATOR</p><h1>把一句话，变成自然的人声。</h1><p>自由控制随机音量、语速和声音效果，合成完成后自动播放到已配置的音频设备。</p></section>
+      <section class="panel">
+        <form id="generate-form">
+          <label>文本<textarea id="text" rows="6" placeholder="输入要说的话..." required></textarea></label>
+          <label>系统提示语<textarea id="systemPrompt" rows="3" placeholder="例如：语气自然，稍微急促，像平常聊天。"></textarea></label>
+          <details class="voice-settings">
+            <summary><span>声音参数</span><small id="voice-settings-summary">音量 18–20 · 语速 0.98–1.10 · lowpass</small></summary>
+            <div class="parameter-grid">
+              <label>最小音量<input id="minVolume" type="number" min="0" max="100" step="1" value="18" required /></label>
+              <label>最大音量<input id="maxVolume" type="number" min="0" max="100" step="1" value="20" required /></label>
+              <label>最小语速<input id="minRate" type="number" min="0.5" max="2" step="0.01" value="0.98" required /></label>
+              <label>最大语速<input id="maxRate" type="number" min="0.5" max="2" step="0.01" value="1.1" required /></label>
+              <label class="effect-field">Effect<input id="effect" value="lowpass" required /></label>
+            </div>
+          </details>
+          <div class="generate-actions">
+            <button type="submit">生成并播放 <i>→</i></button>
+            <label class="device-picker">输出设备<select id="outputDevice" required><option value="">正在读取设备...</option></select></label>
+          </div>
+        </form>
+        <div id="status" class="status" hidden></div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>设置 · CosyVoice Studio</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="nav"><a class="brand" href="/">CosyVoice <span>Studio</span></a><nav><a href="/">生成声音</a><a class="active" href="/settings">设置</a></nav></header>
+    <main class="shell settings-shell">
+      <section class="intro"><p class="eyebrow">CONFIGURATION</p><h1>连接你的声音模型。</h1><p>配置会保存在本机的 data 目录，不会发送到浏览器之外的其他服务。</p></section>
+      <section class="panel">
+        <form id="settings-form">
+          <label>DASHSCOPE_API_KEY<input id="DASHSCOPE_API_KEY" type="password" autocomplete="off" required /></label>
+          <label>WORKSPACE_ID<input id="WORKSPACE_ID" required /></label>
+          <label>DEFAULT_MODEL<input id="DEFAULT_MODEL" required /></label>
+          <label>DEFAULT_VOICE<input id="DEFAULT_VOICE" required /></label>
+          <button type="submit">保存配置 <i>→</i></button>
+        </form>
+        <div id="status" class="status" hidden></div>
+      </section>
+    </main>
+    <script src="/settings.js"></script>
+  </body>
+</html>
