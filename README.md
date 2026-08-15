@@ -9,6 +9,7 @@
 ```env
 DASHSCOPE_API_KEY=你的百炼API Key
 WORKSPACE_ID=你的业务空间ID
+DEFAULT_VOICE=复刻声音ID
 ```
 
 翻译功能默认使用 `qwen3.5-flash`，如果你想改模型，可以额外设置：
