@@ -43,6 +43,8 @@ MCP 使用 stdio 传输，客户端应以项目根目录作为工作目录启动
 COSYVOICE_OUTPUT_DEVICE=CABLE Input (VB-Audio Virtual Cable)
 ```
 
+虚拟声卡播放在 Windows 使用 MME，在 macOS 使用 Core Audio。macOS 会自动匹配 BlackHole、Background Music、Soundflower 等虚拟声卡；也可以通过 `COSYVOICE_OUTPUT_DEVICE` 指定设备名称或编号。Linux 可以启动网页及使用设置、翻译等功能，但播放会返回不支持提示。
+
 每次成功合成后都会自动播放，返回结果中的 `playback.deviceName` 表示实际使用的虚拟声卡。
 生成的 MP3 默认保存在项目的 `tmp/` 目录中；该目录不会纳入 Git。
 

@@ -30,7 +30,8 @@ let activeGenerationController = null;
 let playbackSession = 0;
 
 function buildEmotionInstruction(emotion) {
-  const normalized = String(emotion || "random").trim();
+  const normalized = String(emotion || "none").trim();
+  if (normalized === "none") return "";
   const emotions = [
     "neutral",
     "happy",
@@ -64,8 +65,9 @@ app.put("/api/settings", async (c) => {
 });
 
 app.get("/api/audio-devices", async (c) => {
+  const hostAPIName = process.platform === "darwin" ? "Core Audio" : "MME";
   const devices = listAudioOutputDevices().filter(
-    (device) => device.hostAPIName === "MME"
+    (device) => device.hostAPIName === hostAPIName
   );
   const selection = await getAudioDeviceSelection();
   const fallbackDevice =
@@ -86,8 +88,9 @@ app.get("/api/audio-devices", async (c) => {
 app.put("/api/audio-device", async (c) => {
   const body = await c.req.json();
   const deviceId = Number(body.deviceId);
+  const hostAPIName = process.platform === "darwin" ? "Core Audio" : "MME";
   const device = listAudioOutputDevices().find(
-    (item) => item.id === deviceId && item.hostAPIName === "MME"
+    (item) => item.id === deviceId && item.hostAPIName === hostAPIName
   );
   if (!device) return c.json({ error: "选择的输出设备不存在" }, 400);
   await saveAudioDeviceSelection(deviceId);
@@ -111,7 +114,7 @@ app.post("/api/generate", async (c) => {
   const body = await c.req.json();
   const text = String(body.text || "").trim();
   const instruction = String(body.systemPrompt || "").trim();
-  const emotion = String(body.emotion || "neutral").trim();
+  const emotion = String(body.emotion || "none").trim();
   const audioProfile = String(body.audioProfile || "natural").trim();
   const minVolume = Number(body.minVolume);
   const maxVolume = Number(body.maxVolume);

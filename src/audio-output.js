@@ -4,12 +4,26 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 let portAudio;
 
+const UNSUPPORTED_AUDIO_ERROR =
+  "虚拟声卡播放目前仅支持 Windows（MME）和 macOS（Core Audio）。";
+
 function getPortAudio() {
-  portAudio ??= require("naudiodon");
+  if (!new Set(["win32", "darwin"]).has(process.platform)) {
+    throw new Error(UNSUPPORTED_AUDIO_ERROR);
+  }
+  portAudio ??= require("naudiodon2");
   return portAudio;
 }
 
-const VIRTUAL_DEVICE_PATTERNS = ["CABLE Input", "VB-Audio", "Voicemeeter", "Virtual"];
+const VIRTUAL_DEVICE_PATTERNS = [
+  "CABLE Input",
+  "VB-Audio",
+  "Voicemeeter",
+  "BlackHole",
+  "Background Music",
+  "Soundflower",
+  "Virtual",
+];
 
 function buildNaturalLossFilter(profile = process.env.COSYVOICE_AUDIO_PROFILE || "natural") {
   const normalized = String(profile || "natural").trim();
@@ -63,6 +77,7 @@ function formatFfmpegError(error, stderr = "") {
 }
 
 export function listAudioOutputDevices() {
+  if (!new Set(["win32", "darwin"]).has(process.platform)) return [];
   return getPortAudio().getDevices()
     .filter((device) => device.maxOutputChannels > 0)
     .map((device) => ({
@@ -75,6 +90,9 @@ export function listAudioOutputDevices() {
 }
 
 export function findAudioOutputDevice(query = process.env.COSYVOICE_OUTPUT_DEVICE) {
+  if (!new Set(["win32", "darwin"]).has(process.platform)) {
+    throw new Error(UNSUPPORTED_AUDIO_ERROR);
+  }
   const devices = listAudioOutputDevices();
   const normalizedQuery = String(query ?? "").trim();
   const requestedId = Number(normalizedQuery);
